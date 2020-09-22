@@ -17,6 +17,7 @@ end
 @inline Base.convert(::Type{Double{V}}, v::Vec) where {W,T,V <: AbstractSIMD{W,T}} = Double(convert(V, v), vzero(V))
 @inline Base.convert(::Type{Double{V}}, v::V) where {V <: AbstractSIMD} = Double(v, vzero(V))
 @inline Base.convert(::Type{Double{V}}, m::Mask) where {V} = m
+@inline Base.convert(::Type{Double{V}}, m::V) where {V<:Mask} = m
 @inline Base.convert(::Type{Double{V}}, d::Double{T}) where {W,T,V<:AbstractSIMD{W,T}} = Double(vbroadcast(Val{W}(), d.hi), vbroadcast(Val{W}(), d.lo))
 @inline Base.eltype(d::Double) = eltype(d.hi)
 

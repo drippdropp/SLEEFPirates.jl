@@ -122,10 +122,8 @@ Compute the inverse hyperbolic tangent of `x`.
     d = logk2(ddiv(dadd2(T(1.0), u), dsub2(T(1.0), u)))
     # u = ifelse(u > T(1.0), T(NaN), ifelse(u == T(1.0), T(Inf), V(d) * T(0.5)))
     u = ifelse(u > T(1.0), T(NaN), ifelse(u == T(1.0), T(Inf), V(d) * T(0.5)))
-    m = isinf(x) | isnan(u)
     
-    u = ifelse(m, T(NaN), u)
-    # u = ifelse(isinf(x) | isnan(u), T(NaN), u)
+    u = ifelse(isinf(x) | isnan(u), T(NaN), u)
     u = flipsign(u, x)
     u = ifelse(isnan(x), T(NaN), u)
 

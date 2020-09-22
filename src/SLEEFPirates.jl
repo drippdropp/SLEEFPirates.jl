@@ -171,14 +171,34 @@ for func in (:atan, :hypot, :pow)
         $func(a::Float16, b::Float16) = Float16($func(Float32(a), Float32(b)))
         # @inline Base.$func2(x::AbstractSIMD{W,T}, y::Vec{W,T}) where {W,T<:Union{Float32,Float64}} = $func(x, Vec(y))
         # @inline Base.$func2(x::Vec{W,T}, y::AbstractSIMD{W,T}) where {W,T<:Union{Float32,Float64}} = $func(Vec(x), y)
-        @inline Base.$func2(x::AbstractSIMD{W,T}, y::T) where {W,T<:Union{Float32,Float64}} = $func(x, convert(Vec{W,T}, y))
-        @inline Base.$func2(x::T, y::AbstractSIMD{W,T}) where {W,T<:Union{Float32,Float64}} = $func(convert(Vec{W,T}, x), y)
-        @inline Base.$func2(x::AbstractSIMD{W,T1}, y::T2) where {W,T1<:Union{Float32,Float64},T2} = $func(x, convert(Vec{W,T1}, y))
-        @inline Base.$func2(x::T2, y::AbstractSIMD{W,T1}) where {W,T1<:Union{Float32,Float64},T2} = $func(convert(Vec{W,T1}, x), y)
-        @inline Base.$func2(x::AbstractSIMD{W,T}, y::AbstractSIMD{W,T}) where {W,T<:Union{Float32,Float64}} = $func(x, y)
-        @inline $func(v1::AbstractSIMD{W,I}, v2::AbstractSIMD{W,I}) where {W,I<:Integer} = $func(float(v1), float(v2))
+        # @inline Base.$func2(x::AbstractSIMD{W,T}, y::T) where {W,T<:Union{Float32,Float64}} = $func(x, convert(Vec{W,T}, y))
+        # @inline Base.$func2(x::T, y::AbstractSIMD{W,T}) where {W,T<:Union{Float32,Float64}} = $func(convert(Vec{W,T}, x), y)
+        @inline function Base.$func2(x::AbstractSIMD{W,T}, y::Real) where {W,T}
+            _x, _y = promote(float(x), y)
+            $func(_x, _y)
+        end
+        @inline function Base.$func2(x::Real, y::AbstractSIMD{W,T}) where {W,T}
+            _x, _y = promote(x, float(y))
+            $func(_x, _y)
+        end
+        @inline Base.$func2(x::AbstractSIMD{W,T}, y::AbstractSIMD{W,T}) where {W,T<:FloatType} = $func(x, y)
+        @inline function Base.$func2(x::AbstractSIMD{W1,T1}, y::AbstractSIMD{W2,T2}) where {W1,T1,W2,T2}
+            _x, _y = promote(float(x), float(y))
+            $func(x, y)
+        end
+        # @inline $func(v1::AbstractSIMD{W,I}, v2::AbstractSIMD{W,I}) where {W,I<:Integer} = $func(float(v1), float(v2))
     end
 end
+# @inline Base.:(^)(v::AbstractSIMD{W,T}, i::Integer) where {W,T<:Union{Float32,Float64}} = Base.power_by_squaring(v, i)
+@inline function Base.:(^)(v::AbstractSIMD{W,T}, e::Rational) where {W,T}
+    _v, _e = promote(v, float(e))
+    pow(_v, _e)
+end
+@inline Base.:(^)(::Irrational{:ℯ}, v::AbstractSIMD{W,T}) where {W,T} = exp(v)
+# @inline function Base.:(^)(v1::AbstractSIMD{W,T1}, v2::AbstractSIMD{W,T2}) where {W,T1<:Union{Float32,Float64},T2<:Union{Float32,Float64}}
+#     _v1, _v2 = promote(v1, v2)
+#     pow(_v1, _v2)
+# end
 ldexp(x::Float16, q::Int) = Float16(ldexpk(Float32(x), q))
 
 @inline logit(x) = log(Base.FastMath.div_fast(x,Base.FastMath.sub_fast(1,x)))
